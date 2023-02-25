@@ -23,7 +23,6 @@ class MongoStorage implements iStorage {
         var ret = await <T>col.insertOne(document)
         return ret
     }
-
 }
 
 export { MongoStorage }

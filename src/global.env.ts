@@ -3,6 +3,7 @@ dotenv.config();
 
 export abstract class EnvVars {
     public static mongodb_uri: string = this.format(process.env.MONGODB_URI);
+    public static mongodb_db: string = this.format(process.env.MONGODB_DB);
 
     static format(envVariable: any): string {
         let ret: string;

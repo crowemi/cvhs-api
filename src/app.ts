@@ -1,7 +1,5 @@
 import express from 'express';
-import { MongoStorage } from './storage/mongodb_storage'
-import { iStorage } from './interface/storage'
-import { EnvVars } from './global.env'
+import { iStorage, iStorageFactory } from './interface/storage'
 import { Roster } from './models/roster'
 import { Registry } from './models/resgistry';
 
@@ -11,8 +9,7 @@ app.use(express.urlencoded());
 
 const port: number = 3001;
 
-// TODO: create factory for storage
-const storageClient: iStorage = new MongoStorage(EnvVars.mongodb_uri, "cvhs");
+const storageClient: iStorage = iStorageFactory("mongodb")
 
 app.post('/registry', async (_req, _res) => {
 
@@ -36,15 +33,18 @@ app.post('/registry', async (_req, _res) => {
 
     if (roster) {
         // 2. check that they haven't previously registered
-        var registry = await storageClient.getOne<Registry>("registry", filter)
+        var registry = await storageClient.getOne<Registry>("registry", filter);
         if (registry) {
+            console.debug(`${registry.firstName} ${registry.lastName} already registered.`);
             _res.send("Already registered.");
         } else {
-            await storageClient.insertOne<Registry>("registry", document)
+            // 3. add to registry
+            await storageClient.insertOne<Registry>("registry", document);
+            var res = `${registry.firstName} ${registry.lastName} registered successfully.`;
+            console.debug(res)
+            _res.send(res)
         }
     }
-    // 3. add to registry
-    _res.send();
 });
 
 // Server setup

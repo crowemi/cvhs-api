@@ -1,13 +1,26 @@
-export class Roster {
-    public FirstName: string;
-    public LastName: string;
+type RosterData = {
+    registryID: any | null,
+    incoming: object,
+}
+
+class Roster {
+    public firstName: string;
+    public lastName: string;
+    public data: RosterData | null;
+    public updated: number | null;
 
     constructor(
         firstName: string,
-        lastName: string
+        lastName: string,
+        updated: number | null = null,
+        rosterData: RosterData | null = null,
     ) {
-        this.FirstName = firstName;
-        this.LastName = lastName
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.data = rosterData;
+        this.updated = updated;
     }
 
 }
+
+export { Roster, RosterData }

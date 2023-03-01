@@ -9,4 +9,4 @@ RUN npm install
 
 EXPOSE 8080
 
-ENTRYPOINT [ "sh" ]
+CMD [ "node", "public/app.js"]

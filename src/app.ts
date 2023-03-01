@@ -16,7 +16,7 @@ app.use((req, res, next) => {
     next();
 });
 
-const port: number = 3001;
+const port: number = Number(EnvVars.port);
 
 const storageClient: iStorage = iStorageFactory(EnvVars.storage_type)
 

@@ -24,14 +24,19 @@ app.use(express_1.default.urlencoded());
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', '*');
+    // TODO: add ip filtering
+    console.log(req.ip);
     next();
 });
 const port = Number(global_env_1.EnvVars.port);
 const storageClient = (0, storage_1.iStorageFactory)(global_env_1.EnvVars.storage_type);
+app.get('/health', (_req, _res) => {
+    _res.send(true);
+});
 app.get('/metrics', (_req, _res) => __awaiter(void 0, void 0, void 0, function* () {
     var registryCount = yield storageClient.getMetrics("registry", "count");
-    console.log(registryCount);
-    _res.send({ registryCount: registryCount });
+    console.debug(registryCount);
+    _res.send({ code: 200, metrics: { registryCount: registryCount } });
 }));
 app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function* () {
     var incoming = _req.body;
@@ -62,7 +67,7 @@ app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function
         }
         if (check_registry) {
             console.debug(`${registry.firstName} ${registry.lastName} already registered.`);
-            _res.send("Already registered.");
+            _res.send({ code: 202, message: "Already registered." });
         }
         else {
             try {
@@ -73,13 +78,13 @@ app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function
                 console.debug(res);
                 // 4. update roster with timestamp
                 var data = {
-                    registryID: insert._id,
+                    registryID: insert.insertedId,
                     incoming: incoming
                 };
                 console.debug(data);
                 var update = yield storageClient.updateOne("roster", { _id: new mongodb_1.ObjectId(roster._id) }, { $set: { data: data } });
                 console.debug(update);
-                _res.send(res);
+                _res.send({ code: 200, message: res });
             }
             catch (Error) {
                 (0, helpers_1.ProcessError)(_res, `Failed to insert registry for ${incoming.lastName}`, Error);
@@ -88,10 +93,8 @@ app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function
     }
     else {
         var res = `${incoming.firstName} ${incoming.lastName} not part of roster.`;
-        _res.send(res);
+        _res.send({ code: 202, message: res });
     }
 }));
 // Server setup
-app.listen(port, () => {
-    console.log(`http://localhost:${port}/`);
-});
+app.listen(port, () => { });

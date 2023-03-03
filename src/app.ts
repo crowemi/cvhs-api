@@ -13,6 +13,8 @@ app.use(express.urlencoded());
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', '*');
+    // TODO: add ip filtering
+    console.log(req.ip);
     next();
 });
 
@@ -20,11 +22,15 @@ const port: number = Number(EnvVars.port);
 
 const storageClient: iStorage = iStorageFactory(EnvVars.storage_type)
 
+app.get('/health', (_req, _res) => {
+    _res.send(true);
+});
+
 app.get('/metrics', async (_req, _res) => {
     var registryCount = await storageClient.getMetrics("registry", "count");
-    console.log(registryCount);
-    _res.send({ registryCount: registryCount });
-})
+    console.debug(registryCount);
+    _res.send({ code: 200, metrics: { registryCount: registryCount } });
+});
 app.post('/registry', async (_req, _res) => {
 
     var incoming = _req.body;
@@ -57,7 +63,7 @@ app.post('/registry', async (_req, _res) => {
 
         if (check_registry) {
             console.debug(`${registry.firstName} ${registry.lastName} already registered.`);
-            _res.send("Already registered.");
+            _res.send({ code: 202, message: "Already registered." });
         } else {
             try {
                 // 3. add to registry
@@ -67,24 +73,22 @@ app.post('/registry', async (_req, _res) => {
                 console.debug(res)
                 // 4. update roster with timestamp
                 var data = {
-                    registryID: insert._id,
+                    registryID: insert.insertedId,
                     incoming: incoming
                 }
                 console.debug(data);
                 var update = await storageClient.updateOne<Roster>("roster", { _id: new ObjectId(roster._id) }, { $set: { data: data } })
                 console.debug(update)
-                _res.send(res)
+                _res.send({ code: 200, message: res })
             } catch (Error) {
                 ProcessError(_res, `Failed to insert registry for ${incoming.lastName}`, Error)
             }
         }
     } else {
         var res = `${incoming.firstName} ${incoming.lastName} not part of roster.`;
-        _res.send(res)
+        _res.send({ code: 202, message: res })
     }
 });
 
 // Server setup
-app.listen(port, () => {
-    console.log(`http://localhost:${port}/`);
-});
+app.listen(port, () => { });

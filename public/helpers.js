@@ -4,6 +4,6 @@ exports.ProcessError = void 0;
 const ProcessError = (_res, message, Error) => {
     console.error(message);
     console.error(Error);
-    _res.send("Uh oh! Something isn't right. Please try again later.");
+    _res.send({ code: 500, message: "Uh oh! Something isn't right. Please try again later." });
 };
 exports.ProcessError = ProcessError;

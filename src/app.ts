@@ -50,7 +50,7 @@ app.post('/registry', async (_req, _res) => {
         )
         roster.forEach((r: Roster) => {
             // make sure that the first names match
-            if (r.firstName.toLowerCase() == incoming.firstName.toLowerCase()) {
+            if (r.firstName.toLowerCase() == incoming.firstName.toLowerCase() && r.lastName.toLocaleLowerCase() == incoming.lastName.toLowerCase()) {
                 roster = r
             }
         })

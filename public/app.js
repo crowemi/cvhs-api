@@ -24,8 +24,6 @@ app.use(express_1.default.urlencoded());
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', '*');
-    // TODO: add ip filtering
-    console.log(req.ip);
     next();
 });
 const port = Number(global_env_1.EnvVars.port);
@@ -36,7 +34,12 @@ app.get('/health', (_req, _res) => {
 app.get('/metrics', (_req, _res) => __awaiter(void 0, void 0, void 0, function* () {
     var registryCount = yield storageClient.getMetrics("registry", "count");
     console.debug(registryCount);
-    _res.send({ code: 200, metrics: { registryCount: registryCount } });
+    return _res.send({ code: 200, metrics: { registryCount: registryCount } });
+}));
+app.get('/registry/:id', (_req, _res) => __awaiter(void 0, void 0, void 0, function* () {
+    var id = _req.params.id;
+    var registry = yield storageClient.getOne("registry", { ObjectId: id });
+    return _res.send({ code: 200, payload: { message: registry } });
 }));
 app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function* () {
     var incoming = _req.body;
@@ -45,29 +48,23 @@ app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function
     console.log(registry);
     try {
         // 1. check the submitted last name is part of the roster
-        var roster = yield storageClient.getOne("roster", {
-            "lastName": incoming.lastName
+        var roster = yield storageClient.get("roster", { '$text': { "$search": `${incoming.firstName} ${incoming.lastName}` } });
+        roster.forEach((r) => {
+            // make sure that the first names match
+            if (r.firstName.toLowerCase() == incoming.firstName.toLowerCase()) {
+                roster = r;
+            }
         });
-        // what happens if there are multiple records returned, need to filter by first name too
         console.log(roster);
     }
     catch (Error) {
-        (0, helpers_1.ProcessError)(_res, `Failed to retreive roster for ${incoming.lastName}`, Error);
+        (0, helpers_1.ProcessError)(_res, `Failed to retreive roster for ${incoming.firstName} ${incoming.lastName}`, Error);
     }
-    if (roster) {
+    if (roster._id) {
         // 2. check that they haven't previously registered
-        try {
-            var check_registry = yield storageClient.getOne("registry", {
-                "lastName": incoming.lastName
-            });
-            console.debug(check_registry);
-        }
-        catch (Error) {
-            (0, helpers_1.ProcessError)(_res, `Failed to retreive registry for ${incoming.lastName}`, Error);
-        }
-        if (check_registry) {
+        if (roster.data) {
             console.debug(`${registry.firstName} ${registry.lastName} already registered.`);
-            _res.send({ code: 202, message: "Already registered." });
+            return _res.send({ code: 202, message: "Already registered." });
         }
         else {
             try {
@@ -84,7 +81,7 @@ app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function
                 console.debug(data);
                 var update = yield storageClient.updateOne("roster", { _id: new mongodb_1.ObjectId(roster._id) }, { $set: { data: data } });
                 console.debug(update);
-                _res.send({ code: 200, message: res });
+                return _res.send({ code: 200, payload: { id: insert.insertedId, message: res } });
             }
             catch (Error) {
                 (0, helpers_1.ProcessError)(_res, `Failed to insert registry for ${incoming.lastName}`, Error);
@@ -93,7 +90,7 @@ app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function
     }
     else {
         var res = `${incoming.firstName} ${incoming.lastName} not part of roster.`;
-        _res.send({ code: 202, message: res });
+        return _res.send({ code: 202, payload: { message: res } });
     }
 }));
 // Server setup

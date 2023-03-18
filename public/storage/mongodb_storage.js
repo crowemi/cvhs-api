@@ -26,6 +26,13 @@ class MongoStorage {
             return ret;
         });
     }
+    get(collection, filter) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var col = this.database.collection(collection);
+            var ret = yield col.find(filter).toArray();
+            return ret;
+        });
+    }
     insertOne(collection, document) {
         return __awaiter(this, void 0, void 0, function* () {
             var col = this.database.collection(collection);

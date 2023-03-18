@@ -1,5 +1,10 @@
 import { Response } from "express";
 
+type Ret = {
+    code: number,
+    payload: {}
+}
+
 const ProcessError = (_res: Response, message: string, Error: any): void => {
     console.error(message);
     console.error(Error);

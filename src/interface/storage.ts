@@ -5,6 +5,7 @@ interface iStorage {
     client: any;
     // TODO: these method parameters need to be more generic
     getOne<T>(collection: string, filter: object): any;
+    get<T>(collection: string, filter: object): any;
     insertOne<T>(collection: string, document: object): any;
     updateOne<T>(collection: string, filter: object, options: object): any;
     getMetrics<T>(collection: string, metric: string): any;

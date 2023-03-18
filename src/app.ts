@@ -13,8 +13,6 @@ app.use(express.urlencoded());
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', '*');
-    // TODO: add ip filtering
-    console.log(req.ip);
     next();
 });
 
@@ -29,41 +27,43 @@ app.get('/health', (_req, _res) => {
 app.get('/metrics', async (_req, _res) => {
     var registryCount = await storageClient.getMetrics("registry", "count");
     console.debug(registryCount);
-    _res.send({ code: 200, metrics: { registryCount: registryCount } });
+    return _res.send({ code: 200, metrics: { registryCount: registryCount } });
+});
+app.get('/registry/:id', async (_req, _res) => {
+    var id = _req.params.id;
+    var registry = await storageClient.getOne<Registry>("registry", { ObjectId: id });
+    return _res.send({ code: 200, payload: { message: registry } })
 });
 app.post('/registry', async (_req, _res) => {
 
     var incoming = _req.body;
     console.log(incoming)
 
-    var registry = new Registry(incoming.firstName, incoming.lastName, incoming.email)
+    var registry: Registry = new Registry(incoming.firstName, incoming.lastName, incoming.email)
     console.log(registry)
 
     try {
         // 1. check the submitted last name is part of the roster
-        var roster = await storageClient.getOne<Roster>("roster", {
-            "lastName": incoming.lastName
+        var roster = await storageClient.get<Roster>(
+            "roster",
+            { '$text': { "$search": `${incoming.firstName} ${incoming.lastName}` } }
+        )
+        roster.forEach((r: Roster) => {
+            // make sure that the first names match
+            if (r.firstName.toLowerCase() == incoming.firstName.toLowerCase()) {
+                roster = r
+            }
         })
-        // what happens if there are multiple records returned, need to filter by first name too
         console.log(roster)
     } catch (Error) {
-        ProcessError(_res, `Failed to retreive roster for ${incoming.lastName}`, Error)
+        ProcessError(_res, `Failed to retreive roster for ${incoming.firstName} ${incoming.lastName}`, Error)
     }
 
-    if (roster) {
+    if (roster._id) {
         // 2. check that they haven't previously registered
-        try {
-            var check_registry = await storageClient.getOne<Registry>("registry", {
-                "lastName": incoming.lastName
-            });
-            console.debug(check_registry)
-        } catch (Error) {
-            ProcessError(_res, `Failed to retreive registry for ${incoming.lastName}`, Error)
-        }
-
-        if (check_registry) {
+        if (roster.data) {
             console.debug(`${registry.firstName} ${registry.lastName} already registered.`);
-            _res.send({ code: 202, message: "Already registered." });
+            return _res.send({ code: 202, message: "Already registered." });
         } else {
             try {
                 // 3. add to registry
@@ -79,14 +79,14 @@ app.post('/registry', async (_req, _res) => {
                 console.debug(data);
                 var update = await storageClient.updateOne<Roster>("roster", { _id: new ObjectId(roster._id) }, { $set: { data: data } })
                 console.debug(update)
-                _res.send({ code: 200, message: res })
+                return _res.send({ code: 200, payload: { id: insert.insertedId, message: res } })
             } catch (Error) {
                 ProcessError(_res, `Failed to insert registry for ${incoming.lastName}`, Error)
             }
         }
     } else {
         var res = `${incoming.firstName} ${incoming.lastName} not part of roster.`;
-        _res.send({ code: 202, message: res })
+        return _res.send({ code: 202, payload: { message: res } })
     }
 });
 

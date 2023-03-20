@@ -7,12 +7,12 @@ class Roster {
     public firstName: string;
     public lastName: string;
     public data: RosterData | null;
-    public updated: number | null;
+    public updated: string | null;
 
     constructor(
         firstName: string,
         lastName: string,
-        updated: number | null = null,
+        updated: string | null = null,
         rosterData: RosterData | null = null,
     ) {
         this.firstName = firstName;

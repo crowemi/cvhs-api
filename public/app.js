@@ -38,8 +38,10 @@ app.get('/metrics', (_req, _res) => __awaiter(void 0, void 0, void 0, function* 
 }));
 app.get('/registry/:id', (_req, _res) => __awaiter(void 0, void 0, void 0, function* () {
     var id = _req.params.id;
-    var registry = yield storageClient.getOne("registry", { ObjectId: id });
-    return _res.send({ code: 200, payload: { message: registry } });
+    console.log(id);
+    var registry = yield storageClient.getOne("registry", { _id: new mongodb_1.ObjectId(id) });
+    console.log(registry);
+    return _res.send({ code: 200, payload: { registry: registry } });
 }));
 app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function* () {
     var incoming = _req.body;
@@ -51,8 +53,13 @@ app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function
         var roster = yield storageClient.get("roster", { '$text': { "$search": `${incoming.firstName} ${incoming.lastName}` } });
         roster.forEach((r) => {
             // make sure that the first names match
-            if (r.firstName.toLowerCase() == incoming.firstName.toLowerCase()) {
+            if (r.firstName.toLowerCase() == incoming.firstName.toLowerCase() && r.lastName.toLocaleLowerCase() == incoming.lastName.toLowerCase()) {
                 roster = r;
+                console.debug("First/Last Name match.");
+            }
+            else {
+                roster = null;
+                console.debug("First/Last Name mismatch.");
             }
         });
         console.log(roster);
@@ -60,7 +67,7 @@ app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function
     catch (Error) {
         (0, helpers_1.ProcessError)(_res, `Failed to retreive roster for ${incoming.firstName} ${incoming.lastName}`, Error);
     }
-    if (roster._id) {
+    if (roster && roster._id) {
         // 2. check that they haven't previously registered
         if (roster.data) {
             console.debug(`${registry.firstName} ${registry.lastName} already registered.`);
@@ -92,6 +99,8 @@ app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function
         var res = `${incoming.firstName} ${incoming.lastName} not part of roster.`;
         return _res.send({ code: 202, payload: { message: res } });
     }
+}));
+app.post('/log', (_req, _res) => __awaiter(void 0, void 0, void 0, function* () {
 }));
 // Server setup
 app.listen(port, () => { });

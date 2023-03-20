@@ -31,8 +31,10 @@ app.get('/metrics', async (_req, _res) => {
 });
 app.get('/registry/:id', async (_req, _res) => {
     var id = _req.params.id;
-    var registry = await storageClient.getOne<Registry>("registry", { ObjectId: id });
-    return _res.send({ code: 200, payload: { message: registry } })
+    console.log(id);
+    var registry = await storageClient.getOne<Registry>("registry", { _id: new ObjectId(id) });
+    console.log(registry);
+    return _res.send({ code: 200, payload: { registry: registry } })
 });
 app.post('/registry', async (_req, _res) => {
 
@@ -51,15 +53,19 @@ app.post('/registry', async (_req, _res) => {
         roster.forEach((r: Roster) => {
             // make sure that the first names match
             if (r.firstName.toLowerCase() == incoming.firstName.toLowerCase() && r.lastName.toLocaleLowerCase() == incoming.lastName.toLowerCase()) {
-                roster = r
+                roster = r;
+                console.debug("First/Last Name match.")
+            } else {
+                roster = null;
+                console.debug("First/Last Name mismatch.")
             }
         })
-        console.log(roster)
+        console.log(roster);
     } catch (Error) {
         ProcessError(_res, `Failed to retreive roster for ${incoming.firstName} ${incoming.lastName}`, Error)
     }
 
-    if (roster._id) {
+    if (roster && roster._id) {
         // 2. check that they haven't previously registered
         if (roster.data) {
             console.debug(`${registry.firstName} ${registry.lastName} already registered.`);
@@ -88,6 +94,10 @@ app.post('/registry', async (_req, _res) => {
         var res = `${incoming.firstName} ${incoming.lastName} not part of roster.`;
         return _res.send({ code: 202, payload: { message: res } })
     }
+});
+
+app.post('/log', async (_req, _res) => {
+
 });
 
 // Server setup

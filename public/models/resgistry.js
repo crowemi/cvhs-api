@@ -6,8 +6,8 @@ class Registry {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.created = Date.now();
-        this.updated = Date.now();
+        this.created = new Date(Date.now()).toISOString();
+        this.updated = new Date(Date.now()).toISOString();
     }
 }
 exports.Registry = Registry;

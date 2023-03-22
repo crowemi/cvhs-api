@@ -2,6 +2,7 @@ import express from 'express';
 import { iStorage, iStorageFactory } from './interface/storage'
 import { Roster, RosterData } from './models/roster'
 import { Registry } from './models/resgistry';
+import { Log } from './models/log';
 import { EnvVars } from './global.env'
 import { ProcessError } from './helpers';
 import { ObjectId } from 'mongodb';
@@ -97,7 +98,18 @@ app.post('/registry', async (_req, _res) => {
 });
 
 app.post('/log', async (_req, _res) => {
-
+    var incoming = _req.body;
+    console.log(incoming);
+    var log: Log = {
+        date: new Date(Date.now()),
+        message: incoming.message,
+        severity: incoming.severity,
+        source: incoming.source,
+        ip: incoming.ip,
+        created_at: new Date(Date.now()).toISOString()
+    }
+    storageClient.insertOne<Log>("log", log);
+    return _res.send({ code: 200 })
 });
 
 // Server setup

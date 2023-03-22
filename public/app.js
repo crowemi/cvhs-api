@@ -101,6 +101,18 @@ app.post('/registry', (_req, _res) => __awaiter(void 0, void 0, void 0, function
     }
 }));
 app.post('/log', (_req, _res) => __awaiter(void 0, void 0, void 0, function* () {
+    var incoming = _req.body;
+    console.log(incoming);
+    var log = {
+        date: new Date(Date.now()),
+        message: incoming.message,
+        severity: incoming.severity,
+        source: incoming.source,
+        ip: incoming.ip,
+        created_at: new Date(Date.now()).toISOString()
+    };
+    storageClient.insertOne("log", log);
+    return _res.send({ code: 200 });
 }));
 // Server setup
 app.listen(port, () => { });

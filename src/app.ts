@@ -1,10 +1,10 @@
 import express from 'express';
-import { iStorage, iStorageFactory } from './interface/storage'
+import { iStorage, iStorageFactory, iStorageType } from './interface/storage'
 import { Roster, RosterData } from './models/roster'
 import { Registry } from './models/resgistry';
 import { Log } from './models/log';
 import { EnvVars } from './global.env'
-import { ProcessError } from './helpers';
+import { HealthCheck, ProcessError } from './helpers/common';
 import { ObjectId } from 'mongodb';
 
 
@@ -18,11 +18,10 @@ app.use((req, res, next) => {
 });
 
 const port: number = Number(EnvVars.port);
-
-const storageClient: iStorage = iStorageFactory(EnvVars.storage_type)
+const storageClient: iStorage = iStorageFactory(iStorageType.mongodb)
 
 app.get('/health', (_req, _res) => {
-    _res.send(true);
+    _res.send(HealthCheck());
 });
 
 app.get('/metrics', async (_req, _res) => {
@@ -96,6 +95,9 @@ app.post('/registry', async (_req, _res) => {
         return _res.send({ code: 202, payload: { message: res } })
     }
 });
+app.post('/confirm-emial', async (_req, res) => {
+
+})
 
 app.post('/log', async (_req, _res) => {
     var incoming = _req.body;

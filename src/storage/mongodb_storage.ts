@@ -15,31 +15,27 @@ class MongoStorage implements iStorage {
 
     async getOne<T>(collection: string, filter: object): Promise<T> {
         var col = this.database.collection(collection);
-        var ret = await <T>col.findOne(filter)
-        return ret
+        return await <T>col.findOne(filter)
     }
 
     async get<T>(collection: string, filter: object): Promise<T> {
         var col = this.database.collection(collection);
-        var ret = await <T>col.find(filter).toArray();
-        return ret;
+        return await <T>col.find(filter).toArray();
     }
 
-    async insertOne<T>(collection: string, document: object): Promise<T> {
+    async insertOne<T>(collection: string, document: any): Promise<T> {
         var col = this.database.collection(collection);
-        var ret = await <T>col.insertOne(document);
-        return ret;
+        return await <T>col.insertOne(document);
     }
+
     async updateOne<T>(collection: string, filter: object, options: object): Promise<T> {
         var col = this.database.collection(collection);
-        var ret = await <T>col.updateOne(filter, options);
-        return ret;
+        return await <T>col.updateOne(filter, options);
     }
 
     async getMetrics<T>(collection: string, metric: string): Promise<T> {
         var col = this.database.collection(collection);
-        var ret = await <T>col.countDocuments();
-        return ret;
+        return await <T>col.countDocuments();
     }
 }
 

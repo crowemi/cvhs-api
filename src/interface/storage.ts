@@ -11,24 +11,20 @@ interface iStorage {
     getMetrics<T>(collection: string, metric: string): any;
 }
 
-const iStorageTypes = ["mongodb",]
+enum iStorageType { "mongodb" }
 
-const iStorageFactory = (type: string): iStorage => {
+const iStorageFactory = (type: iStorageType): iStorage => {
     console.debug(`iStorageFactory start.`)
     console.debug(`iStorageFactory type ${type}.`)
-    if (iStorageTypes.includes(type)) {
-        switch (type) {
-            case "mongodb": {
-                console.debug(`Creating mongodb storage.`)
-                return new MongoStorage(EnvVars.mongodb_uri, EnvVars.mongodb_db)
-            }
-            default: {
-                throw new Error(`${type} is an invalid storage type`)
-            }
+    switch (type) {
+        case iStorageType.mongodb: {
+            console.debug(`Creating mongodb storage.`)
+            return new MongoStorage(EnvVars.mongodb_uri, EnvVars.mongodb_db)
         }
-    } else {
-        throw new Error(`${type} is an invalid storage type`)
+        default: {
+            throw new Error(`${type} is an invalid storage type`)
+        }
     }
 }
 
-export { iStorage, iStorageFactory }
+export { iStorage, iStorageFactory, iStorageType }

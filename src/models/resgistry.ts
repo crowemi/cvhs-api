@@ -1,6 +1,7 @@
-import { Roster } from './roster'
+import { ObjectId } from "mongodb";
 
 export class Registry {
+    public _id!: ObjectId;
     public firstName: string;
     public lastName: string;
     public email: string;
@@ -13,5 +14,9 @@ export class Registry {
         this.email = email;
         this.created = new Date(Date.now()).toISOString();
         this.updated = new Date(Date.now()).toISOString();
+    }
+
+    public confirmEmailEndpoint = (): string => {
+        return `/confirm-email/${this._id}`;
     }
 }

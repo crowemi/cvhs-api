@@ -1,8 +1,7 @@
 import { Response } from "express";
 
-type Ret = {
-    code: number,
-    payload: {}
+const HealthCheck = (): Boolean => {
+    return true;
 }
 
 const ProcessError = (_res: Response, message: string, Error: any): void => {
@@ -11,4 +10,7 @@ const ProcessError = (_res: Response, message: string, Error: any): void => {
     _res.send({ code: 500, message: "Uh oh! Something isn't right. Please try again later." })
 }
 
-export { ProcessError }
+const ProcessLog = (message: string) => { }
+
+
+export { ProcessError, HealthCheck }

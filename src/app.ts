@@ -95,9 +95,6 @@ app.post('/registry', async (_req, _res) => {
         return _res.send({ code: 202, payload: { message: res } })
     }
 });
-app.post('/confirm-emial', async (_req, res) => {
-
-})
 
 app.post('/log', async (_req, _res) => {
     var incoming = _req.body;

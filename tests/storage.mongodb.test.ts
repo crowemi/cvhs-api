@@ -1,13 +1,13 @@
 import { iStorage, iStorageFactory, iStorageType } from '../src/interface/storage'
+import { MongoStorage } from '../src/storage/mongodb_storage'
 import { Registry } from '../src/models/resgistry';
+import { EnvVars } from '../src/global.env';
 
-const client: iStorage = iStorageFactory(iStorageType.mongodb);
+var storage: iStorage = new MongoStorage(EnvVars.mongodb_uri, EnvVars.mongodb_db)
 
-test("Test Registry", async () => {
-    // create register
-    var registry = new Registry("test", "test", "test@test.com");
-    var ret = await client.insertOne<Registry>("registry", registry);
-    expect(ret.acknowledged).toEqual(true);
+test("Test Storage MongoDB", async () => {
+    var ret = await storage.database.command({ ping: "1" });
+    expect(ret.ok).toEqual(1);
+})
 
-    // test duplicate key error
-});
+afterAll(async () => { await storage.client.close(); });

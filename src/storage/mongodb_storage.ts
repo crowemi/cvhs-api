@@ -1,9 +1,10 @@
 import { MongoClient, ServerApiVersion, Db, MongoClientOptions } from "mongodb";
 import { iStorage } from "../interface/storage";
+import { iModel } from "../interface/model";
 
 class MongoStorage implements iStorage {
     public client: MongoClient;
-    private database: Db;
+    public database: Db;
 
     constructor(uri: string, database: string) {
         const options: MongoClientOptions = {
@@ -15,31 +16,38 @@ class MongoStorage implements iStorage {
 
     async getOne<T>(collection: string, filter: object): Promise<T> {
         var col = this.database.collection(collection);
-        var ret = await <T>col.findOne(filter)
-        return ret
+        return await <T>col.findOne(filter)
     }
 
     async get<T>(collection: string, filter: object): Promise<T> {
         var col = this.database.collection(collection);
-        var ret = await <T>col.find(filter).toArray();
-        return ret;
+        return await <T>col.find(filter).toArray();
     }
 
-    async insertOne<T>(collection: string, document: object): Promise<T> {
+    async insertOne<T>(collection: string, document: any): Promise<T> {
         var col = this.database.collection(collection);
-        var ret = await <T>col.insertOne(document);
-        return ret;
+        return await <T>col.insertOne(document);
     }
+
     async updateOne<T>(collection: string, filter: object, options: object): Promise<T> {
         var col = this.database.collection(collection);
-        var ret = await <T>col.updateOne(filter, options);
-        return ret;
+        return await <T>col.updateOne(filter, options);
+    }
+
+    async deleteOne<T>(collection: string, filter: object): Promise<T> {
+        var col = this.database.collection(collection);
+        return await <T>col.deleteOne(filter);
+    }
+
+    async replaceOne<T>(collection: string, document: iModel): Promise<T> {
+        var col = this.database.collection(collection);
+        document.updated = new Date();
+        return await <T>col.replaceOne({ _id: document._id }, document);
     }
 
     async getMetrics<T>(collection: string, metric: string): Promise<T> {
         var col = this.database.collection(collection);
-        var ret = await <T>col.countDocuments();
-        return ret;
+        return await <T>col.countDocuments();
     }
 }
 

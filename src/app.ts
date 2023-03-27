@@ -1,10 +1,10 @@
 import express from 'express';
-import { iStorage, iStorageFactory } from './interface/storage'
-import { Roster, RosterData } from './models/roster'
+import { iStorage, iStorageFactory, iStorageType } from './interface/storage'
+import { Roster } from './models/roster'
 import { Registry } from './models/resgistry';
-import { Log } from './models/log';
+import { Log, LogSeverity } from './models/log';
 import { EnvVars } from './global.env'
-import { ProcessError } from './helpers';
+import { HealthCheck, ProcessError } from './helpers/common';
 import { ObjectId } from 'mongodb';
 
 
@@ -18,11 +18,11 @@ app.use((req, res, next) => {
 });
 
 const port: number = Number(EnvVars.port);
-
-const storageClient: iStorage = iStorageFactory(EnvVars.storage_type)
+const storageClient: iStorage = iStorageFactory(iStorageType.mongodb)
 
 app.get('/health', (_req, _res) => {
-    _res.send(true);
+    var isSuccessful = HealthCheck();
+    _res.send(isSuccessful);
 });
 
 app.get('/metrics', async (_req, _res) => {
@@ -30,6 +30,7 @@ app.get('/metrics', async (_req, _res) => {
     console.debug(registryCount);
     return _res.send({ code: 200, metrics: { registryCount: registryCount } });
 });
+
 app.get('/registry/:id', async (_req, _res) => {
     var id = _req.params.id;
     console.log(id);
@@ -98,17 +99,10 @@ app.post('/registry', async (_req, _res) => {
 });
 
 app.post('/log', async (_req, _res) => {
+    Log.logDebug(storageClient, `${incoming}`, 'api', incoming.ip);
     var incoming = _req.body;
-    console.log(incoming);
-    var log: Log = {
-        date: new Date(Date.now()),
-        message: incoming.message,
-        severity: incoming.severity,
-        source: incoming.source,
-        ip: incoming.ip,
-        created_at: new Date(Date.now()).toISOString()
-    }
-    storageClient.insertOne<Log>("log", log);
+    Log.logDebug(storageClient, `${incoming}`, 'api', incoming.ip);
+    Log.processLog(storageClient, incoming.message, incoming.severity, incoming.source, incoming.ip);
     return _res.send({ code: 200 })
 });
 

@@ -1,5 +1,12 @@
 import { iStorage } from "../interface/storage";
 
+enum LogSeverity {
+    DEBUG = "debug",
+    INFO = "info",
+    WARNING = "warning",
+    ERROR = "error"
+}
+
 class Log {
     public date: Date;
     public message: string;
@@ -17,19 +24,28 @@ class Log {
         this.ip = ip;
     }
 
+    static logError(storageClient: iStorage, message: string, source: string, ip: string) { this.processLog(storageClient, message, LogSeverity.ERROR, source, ip); }
+    static logInfo(storageClient: iStorage, message: string, source: string, ip: string) { this.processLog(storageClient, message, LogSeverity.INFO, source, ip); }
+    static logWarning(storageClient: iStorage, message: string, source: string, ip: string) { this.processLog(storageClient, message, LogSeverity.WARNING, source, ip); }
+    static logDebug(storageClient: iStorage, message: string, source: string, ip: string) { this.processLog(storageClient, message, LogSeverity.DEBUG, source, ip); }
     static processLog(storageClient: iStorage, message: string, severity: string, source: string, ip: string) {
-        var log: Log = {
-            date: new Date(Date.now()),
-            message: message,
-            severity: severity,
-            source: source,
-            ip: ip,
-            created_at: new Date(Date.now()).toISOString()
+        try {
+            var log: Log = {
+                date: new Date(Date.now()),
+                message: message,
+                severity: severity,
+                source: source,
+                ip: ip,
+                created_at: new Date(Date.now()).toISOString()
+            }
+            storageClient.insertOne<Log>("log", log);
+        } catch (error) {
+            console.error("Failed logging Log.processLog().");
+            console.error(Error);
         }
-        storageClient.insertOne<Log>("log", log);
     }
 
 }
 
 
-export { Log }
+export { Log, LogSeverity }

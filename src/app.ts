@@ -2,7 +2,7 @@ import express from 'express';
 import { iStorage, iStorageFactory, iStorageType } from './interface/storage'
 import { Roster } from './models/roster'
 import { Registry } from './models/resgistry';
-import { Log } from './models/log';
+import { Log, LogSeverity } from './models/log';
 import { EnvVars } from './global.env'
 import { HealthCheck, ProcessError } from './helpers/common';
 import { ObjectId } from 'mongodb';
@@ -30,6 +30,7 @@ app.get('/metrics', async (_req, _res) => {
     console.debug(registryCount);
     return _res.send({ code: 200, metrics: { registryCount: registryCount } });
 });
+
 app.get('/registry/:id', async (_req, _res) => {
     var id = _req.params.id;
     console.log(id);
@@ -98,7 +99,9 @@ app.post('/registry', async (_req, _res) => {
 });
 
 app.post('/log', async (_req, _res) => {
+    Log.logDebug(storageClient, `${incoming}`, 'api', incoming.ip);
     var incoming = _req.body;
+    Log.logDebug(storageClient, `${incoming}`, 'api', incoming.ip);
     Log.processLog(storageClient, incoming.message, incoming.severity, incoming.source, incoming.ip);
     return _res.send({ code: 200 })
 });

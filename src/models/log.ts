@@ -1,4 +1,6 @@
-export class Log {
+import { iStorage } from "../interface/storage";
+
+class Log {
     public date: Date;
     public message: string;
     public severity: string;
@@ -14,4 +16,20 @@ export class Log {
         this.created_at = created_at;
         this.ip = ip;
     }
+
+    static processLog(storageClient: iStorage, message: string, severity: string, source: string, ip: string) {
+        var log: Log = {
+            date: new Date(Date.now()),
+            message: message,
+            severity: severity,
+            source: source,
+            ip: ip,
+            created_at: new Date(Date.now()).toISOString()
+        }
+        storageClient.insertOne<Log>("log", log);
+    }
+
 }
+
+
+export { Log }

@@ -1,6 +1,6 @@
 import express from 'express';
 import { iStorage, iStorageFactory, iStorageType } from './interface/storage'
-import { Roster, RosterData } from './models/roster'
+import { Roster } from './models/roster'
 import { Registry } from './models/resgistry';
 import { Log } from './models/log';
 import { EnvVars } from './global.env'
@@ -21,7 +21,8 @@ const port: number = Number(EnvVars.port);
 const storageClient: iStorage = iStorageFactory(iStorageType.mongodb)
 
 app.get('/health', (_req, _res) => {
-    _res.send(HealthCheck());
+    var isSuccessful = HealthCheck();
+    _res.send(isSuccessful);
 });
 
 app.get('/metrics', async (_req, _res) => {
@@ -98,16 +99,7 @@ app.post('/registry', async (_req, _res) => {
 
 app.post('/log', async (_req, _res) => {
     var incoming = _req.body;
-    console.log(incoming);
-    var log: Log = {
-        date: new Date(Date.now()),
-        message: incoming.message,
-        severity: incoming.severity,
-        source: incoming.source,
-        ip: incoming.ip,
-        created_at: new Date(Date.now()).toISOString()
-    }
-    storageClient.insertOne<Log>("log", log);
+    Log.processLog(storageClient, incoming.message, incoming.severity, incoming.source, incoming.ip);
     return _res.send({ code: 200 })
 });
 

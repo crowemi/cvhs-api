@@ -10,7 +10,5 @@ const ProcessError = (_res: Response, message: string, Error: any): void => {
     _res.send({ code: 500, message: "Uh oh! Something isn't right. Please try again later." })
 }
 
-const ProcessLog = (message: string) => { }
-
 
 export { ProcessError, HealthCheck }
